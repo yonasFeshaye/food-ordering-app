@@ -5,3 +5,18 @@ section.hero {
   @apply grid;
   grid-template-columns:.4fr .6fr;
 }
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  @apply block border w-full my-4 border-gray-300 rounded-xl p-2 text-gray-700 bg-gray-100;
+  @apply focus:outline-none focus:border-blue-500;
+}
+
+button{
+  @apply block w-full text-secondary-200 font-semibold;
+  @apply border border-gray-300 rounded-xl px-6 py-2
+}
+button[type="submit"], .submit {
+  @apply border-0 bg-primary text-white;
+}

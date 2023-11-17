@@ -1,5 +1,5 @@
-export default function SectionHeaders(subHeader, mainHeader,categoryHeader) {
-    <>  
+export default function SectionHeaders({subHeader, mainHeader,categoryHeader}) {
+    return (<>  
         <h3 className="uppercase text-secondary-200 font-semibold leading-4">
                     {subHeader}
                 </h3>
@@ -9,5 +9,5 @@ export default function SectionHeaders(subHeader, mainHeader,categoryHeader) {
                 <h2 className="text-secondary-200 font-semibold text-2xl" >
                     {categoryHeader}
                 </h2>
-    </>
+    </>)
 }

@@ -17,10 +17,14 @@ export default function HomeMenu() {
                 <SectionHeaders
                     subHeader={"Check out"}
                     mainHeader={"Our Menu"} 
-                    categoryHeader={"Breakfast"}
+                    categoryHeader={".Order Online or Call to Order Pickup (202)588-7061 "}
                />
             </div>  
             <div className="grid grid-cols-4 gap-4 px-10">
+            <MenuItem />
+            <MenuItem />
+            <MenuItem />
+            <MenuItem />
             <MenuItem />
             <MenuItem />
             <MenuItem />
