@@ -1,5 +1,4 @@
 "use client"
-import { set } from "mongoose"
 import Image from "next/image"
 import { useState } from "react"
 
@@ -23,6 +22,8 @@ export default function RegisterPage() {
             <h1 className="text-center text-primary text-3xl font-semibold mb-4">
                 Register
             </h1>
+            {userCreated && (<div className="my-4">
+                User created. Now you can login </div>)}
             <form className="block max-w-xs mx-auto" onSubmit={handleSubmit}>
                 <input type="email" placeholder="Email" value={email}
                     disabled={creatingUser}

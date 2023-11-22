@@ -6,10 +6,13 @@
       "dom",
       "es2017"
     ],
+    "baseUrl": ".",
     "paths": {
       "@/app/*": [
         "./src/*"
-      ]
+      ],
+      "@/app/models/*": ["src/app/models/*"],
+      "@/components/*": ["src/components/*"]
     },
     "allowJs": true,
     "strict": true,
