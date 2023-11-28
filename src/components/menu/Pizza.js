@@ -8,8 +8,8 @@ export default function Pizza() {
                 <div className="absolute top-[14px] -z-10 -left-0">
                     <Image src={'/pizza.png'} width={120} height={70} alt="sallads" />
                 </div>
-                <div className="absolute top-[5px] -right-0 -z-10">
-                    <Image src={'/pizzaR.png'} width={140} height={70} alt="pizza"/>
+                <div className="absolute top-[12px] -z-10 -right-11">
+                    <Image src={'/pizza-slice.jpg'} width={280} height={120} alt="pizza"/>
                 </div>
             </div>
             <div className="text-center pb-0">

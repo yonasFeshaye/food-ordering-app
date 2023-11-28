@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 
+
 export default function ProfilePage() { 
   const session = useSession()
   const [userName, setUserName] = useState('')
@@ -33,6 +34,16 @@ export default function ProfilePage() {
       setSaved(true)
     }
   }
+
+  function handleFileChange(e) {
+    const file = e.target.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
+    fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+  }
   if (status === 'unauthenticated') {
     return redirect('/login')
   }
@@ -50,11 +61,15 @@ export default function ProfilePage() {
       {isSaving && (<h2 className='text-center bg-green-100 p-4 rounded-lg border border-green-300'>
         Saving ...
       </h2>)}
-        <div className='flex gap-2 items-center'>
-          <div>
-            <div className='bg-gray-200 p-2 rounded-lg'>
-            <Image className='rounded-lg ml-3 pb-2' src={'/Yonas Feshaye.jpg'} width={80} height={80} alt={'avator'}/>
-            <button type='button' className='text-sm'>Change Avator</button>
+        <div className='flex gap-4 items-center'>
+          <div className=''>
+            <div className='p-2 rounded-lg relative'>
+            <Image className='rounded-lg mt-3 mb-4' src={'/Yonas Feshaye.jpg'} width={120} height={120} alt={'avator'}/>
+            
+            <label>
+               <input type='file' className='hidden' onChange={handleFileChange}/>
+              <span className='block border border-gray-300 rounded-lg p-2 text-center cursor-pointer'>Edit</span>
+            </label>
             </div>
           </div>
           <form className='grow' onSubmit={handleProfileInfoUpdate}>
