@@ -10,7 +10,7 @@ input[type="text"],
 input[type="tel"],
 input[type="email"],
 input[type="password"] {
-  @apply block border w-full my-4 border-gray-300 rounded-xl p-2 text-gray-700 bg-gray-100;
+  @apply block border w-full mb-4 border-gray-300 rounded-xl p-2 text-gray-700 bg-gray-100;
   @apply focus:outline-none focus:border-blue-500;
 }
 
@@ -19,6 +19,10 @@ input[type="tel"]:disabled,
 input[type="password"]:disabled,
 input[type="text"]:disabled {
   @apply bg-gray-300 cursor-not-allowed border-0 text-gray-500;
+}
+
+label {
+  @apply text-gray-500 text-sm;
 }
 
 button{

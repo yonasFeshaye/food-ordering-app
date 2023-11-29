@@ -5,69 +5,130 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 
-
 export default function ProfilePage() { 
   const session = useSession()
   const [userName, setUserName] = useState('')
-  const [saved, setSaved] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [image, setImage] = useState('')
   const [phone, setPhone] = useState('')
   const [streetAddress, setStreetAddress] = useState('')
   const [zip, setZip] = useState('')
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
   const [country, setCountry] = useState('')
-
-
   const { status } = session
   
   useEffect(() => {
     if (status === 'authenticated') {
       setUserName(session.data.user.name)
-    }
+      setImage(session.data.user.image)
+      fetch('/api/profile').then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok.')
+        }
+    
+        return response.json()
+        }).then(data => {
+          if (
+            data &&
+            data.phone &&
+            data.streetAddress && 
+            data.zip &&
+            data.city &&
+            data.state &&
+            data.country
+          ) { 
+            setPhone(data.phone)
+            setStreetAddress(data.streetAddress)
+            setZip(data.zip)
+            setCity(data.city)
+            setState(data.state)
+            setCountry(data.country)
+          } else {
+            console.log('Invalid response format from /api/profile')
+          }
+        }).catch(error => {
+          console.error('Error fetching profile data', error)
+        })
+      
+      }  
   }, [status, session])
 
   async function handleProfileInfoUpdate(ev) {
-    ev.preventDefault()
-    setSaved(false)
-    setIsSaving(true)
+  ev.preventDefault();
 
-    const savingPromise = new Promise(async(resolve, reject) => {
-    const response = await fetch('/api/profile', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        name: userName,
-        phone,
-        streetAddress,
-        zip,
-        city,
-        state,
-        country
+  const savingPromise = new Promise(async (resolve, reject) => {
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: userName,
+          image,
+          phone,
+          streetAddress,
+          zip,
+          city,
+          state,
+          country,
+        }),
+      });
 
-       })
-    })
-  })
-    setIsSaving(false)
-    if (response.ok) {
-      setSaved(true)
+      if (response.ok) {
+        resolve();
+      } else {
+        reject();
+      }
+    } catch (error) {
+      console.error('Error during profile update:', error);
+      reject(error); // You can reject with the error object for more details
     }
-  }
+  });
 
-  function handleFileChange(ev) {
-    const file = ev.target.files[0]
-    const formData = new FormData()
-    formData.append('file', file)
-    fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
+  // Now you can use the savingPromise
+  savingPromise
+    .then(() => {
+      // Handle successful save
+      console.log('Profile updated successfully');
     })
+    .catch(() => {
+      // Handle failed save
+      console.error('Failed to update profile');
+    });
+}
+
+function handleFileChange(ev) {
+  const file = ev.target.files;
+
+  if (file?.length) {
+    const data = new FormData();
+    data.set('file', file[0]);
+
+    const uploadPromise = fetch('/api/upload', {
+      method: 'POST',
+      body: data,
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.json().then(link => {
+            setImage(link);
+          });
+        }
+        throw new Error('Network response was not ok.');
+      })
+      .catch(error => {
+        console.error('Error during file upload:', error);
+        // Handle the error appropriately
+      });
   }
-  if (status === 'unauthenticated') {
-    return redirect('/login')
-  }
+}
+
+// Check status and return appropriate content
+if (status === 'loading') {
+  return 'Loading';
+}
+if (status === 'unauthenticated') {
+  return redirect('/login');
+}
 
   // const userImage = session.data.user.image
   return (
@@ -76,45 +137,63 @@ export default function ProfilePage() {
         Profile
       </h1>
       <div className='max-w-md mx-auto'>
-        {saved && (<h2 className='text-center bg-green-100 p-4 rounded-lg border border-green-300'>
-        Profile saved successfully
-      </h2>)}
-      {isSaving && (<h2 className='text-center bg-green-100 p-4 rounded-lg border border-green-300'>
-        Saving ...
-      </h2>)}
         <div className='flex gap-2'>
-          <div className=''>
+          <div>
             <div className='p-2 rounded-lg relative'>
-            <Image className='rounded-lg mt-3 mb-2' src={'/Yonas Feshaye.jpg'} width={120} height={120} alt={'avator'}/>
+            <Image className='rounded-lg mt-3 mb-2' src={'/Yonas Feshaye.jpg'} width={120}height={120} alt={'avator'}/>
+             {/* {image && (<Image className='rounded-lg mt-3 mb-2' src={'/Yonas Feshaye.jpg'} width={120} height={120} alt={'avator'}/>)} */}
             
             <label>
-               <input type='file' className='hidden' onChange={handleFileChange}/>
+              <input type='file' className='hidden' onChange={handleFileChange}/>
               <span className='block border border-gray-300 rounded-lg p-2 text-center cursor-pointer'>Edit</span>
             </label>
             </div>
           </div>
           <form className='grow' onSubmit={handleProfileInfoUpdate}>
+            <label>First and Last Name</label>
             <input type='text' placeholder='First and last name'
-            value={userName} onChange={(e) => setUserName(e.target.value)}
+            value={userName} onChange={(ev) => setUserName(ev.target.value)}
             />
+            <label>Email</label>
             <input type='email' disabled={true} value={session.data && session.data.user && session.data.user.email}/>
+            <label>Phone Number</label>
             <input type='tel' placeholder='Phone number'
             value={phone} onChange={ev => setPhone(ev.target.value)}/>
+            <label>Address</label>
             <input type='text' placeholder='Street Address'
             value={streetAddress} onChange={ev => setStreetAddress(ev.target.value)}/>
-            <div className='flex gap-4'>
+            
+            <div className='flex gap-2'>
+            <div>
+              <label>Zip Code</label>
             <input type='text' placeholder='Zip'
             value={zip} onChange={ev => setZip(ev.target.value)}/>
+            </div>
+            <div>
+              <label>City</label>
             <input type='text' placeholder='City'
             value={city} onChange={ev => setCity(ev.target.value)}/>
-            </div>          
+            </div>
+            
+            </div>
+             <div className='flex gap-2'>
+              <div>
+                 <label>State</label> 
             <input type='text' placeholder='State'
             value={state} onChange={ev => setState(ev.target.value)}/>
+
+              </div>
+             
+            <div>
+               <label>Country</label>
             <input type='text' placeholder='Country'
             value={country} onChange={ev => setCountry(ev.target.value)}/>
+            </div>
+           
+            </div>
             <button type='submit'>Save</button>
-          </form>  
-        </div>
+          </form>
+          </div>  
       </div>
     </section>
   )

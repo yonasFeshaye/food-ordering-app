@@ -13,7 +13,7 @@ export default function LoginPage() {
         ev.preventDefault()
         setLoginInProgress(true)
 
-       const result = await signIn('credentials', { redirect: false, email, password })
+    await signIn('credentials', { redirect: false, email, password })
         
         setLoginInProgress(false)
         
