@@ -9,15 +9,7 @@ export async function PUT(req) {
   const session = await getServerSession(authOptions);
   const email = session.user.email;
 
-  if ('name' in data) {
-  const filter = { email };
-  const update = { $set: { name: data.name } };
-
-  try {
-    await User.updateOne(filter, update);
-  } catch (error) {
-    console.error('Error updating user:', error);
-  }
-}
+  await User.updateOne({email}, data)
+  
   return Response.json(true)
 }

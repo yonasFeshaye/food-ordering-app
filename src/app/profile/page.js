@@ -11,6 +11,14 @@ export default function ProfilePage() {
   const [userName, setUserName] = useState('')
   const [saved, setSaved] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [streetAddress, setStreetAddress] = useState('')
+  const [zip, setZip] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [country, setCountry] = useState('')
+
+
   const { status } = session
   
   useEffect(() => {
@@ -18,25 +26,38 @@ export default function ProfilePage() {
       setUserName(session.data.user.name)
     }
   }, [status, session])
-  async function handleProfileInfoUpdate(e) {
-    e.preventDefault()
+
+  async function handleProfileInfoUpdate(ev) {
+    ev.preventDefault()
     setSaved(false)
     setIsSaving(true)
+
+    const savingPromise = new Promise(async(resolve, reject) => {
     const response = await fetch('/api/profile', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ name: userName })
+      body: JSON.stringify({ 
+        name: userName,
+        phone,
+        streetAddress,
+        zip,
+        city,
+        state,
+        country
+
+       })
     })
+  })
     setIsSaving(false)
     if (response.ok) {
       setSaved(true)
     }
   }
 
-  function handleFileChange(e) {
-    const file = e.target.files[0]
+  function handleFileChange(ev) {
+    const file = ev.target.files[0]
     const formData = new FormData()
     formData.append('file', file)
     fetch('/api/upload', {
@@ -50,7 +71,7 @@ export default function ProfilePage() {
 
   // const userImage = session.data.user.image
   return (
-    <div className="my-8">
+    <section className="my-8">
       <h1 className="text-center text-primary text-3xl font-semibold mb-4">
         Profile
       </h1>
@@ -61,10 +82,10 @@ export default function ProfilePage() {
       {isSaving && (<h2 className='text-center bg-green-100 p-4 rounded-lg border border-green-300'>
         Saving ...
       </h2>)}
-        <div className='flex gap-4 items-center'>
+        <div className='flex gap-2'>
           <div className=''>
             <div className='p-2 rounded-lg relative'>
-            <Image className='rounded-lg mt-3 mb-4' src={'/Yonas Feshaye.jpg'} width={120} height={120} alt={'avator'}/>
+            <Image className='rounded-lg mt-3 mb-2' src={'/Yonas Feshaye.jpg'} width={120} height={120} alt={'avator'}/>
             
             <label>
                <input type='file' className='hidden' onChange={handleFileChange}/>
@@ -77,10 +98,24 @@ export default function ProfilePage() {
             value={userName} onChange={(e) => setUserName(e.target.value)}
             />
             <input type='email' disabled={true} value={session.data && session.data.user && session.data.user.email}/>
+            <input type='tel' placeholder='Phone number'
+            value={phone} onChange={ev => setPhone(ev.target.value)}/>
+            <input type='text' placeholder='Street Address'
+            value={streetAddress} onChange={ev => setStreetAddress(ev.target.value)}/>
+            <div className='flex gap-4'>
+            <input type='text' placeholder='Zip'
+            value={zip} onChange={ev => setZip(ev.target.value)}/>
+            <input type='text' placeholder='City'
+            value={city} onChange={ev => setCity(ev.target.value)}/>
+            </div>          
+            <input type='text' placeholder='State'
+            value={state} onChange={ev => setState(ev.target.value)}/>
+            <input type='text' placeholder='Country'
+            value={country} onChange={ev => setCountry(ev.target.value)}/>
             <button type='submit'>Save</button>
           </form>  
         </div>
       </div>
-    </div>
+    </section>
   )
 }
