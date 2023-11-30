@@ -1,200 +1,278 @@
-'use client'
-import { useSession } from 'next-auth/react'
-import { redirect } from 'next/navigation'
-import Image from 'next/image'
-import { useEffect, useState } from 'react'
+"use client"
 
+import { useSession, signOut } from 'next-auth/react';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
-export default function ProfilePage() { 
-  const session = useSession()
-  const [userName, setUserName] = useState('')
-  const [image, setImage] = useState('')
-  const [phone, setPhone] = useState('')
-  const [streetAddress, setStreetAddress] = useState('')
-  const [zip, setZip] = useState('')
-  const [city, setCity] = useState('')
-  const [state, setState] = useState('')
-  const [country, setCountry] = useState('')
-  const { status } = session
-  
+export default function ProfilePage() {
+  const { data: session, status } = useSession();
+  const [userData, setUserData] = useState({
+    name: '',
+    image: '',
+    phone: '',
+    streetAddress: '',
+    zip: '',
+    city: '',
+    state: '',
+    country: '',
+  });
+
   useEffect(() => {
     if (status === 'authenticated') {
-      setUserName(session.data.user.name)
-      setImage(session.data.user.image)
-      fetch('/api/profile').then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok.')
-        }
-    
-        return response.json()
-        }).then(data => {
-          if (
-            data &&
-            data.phone &&
-            data.streetAddress && 
-            data.zip &&
-            data.city &&
-            data.state &&
-            data.country
-          ) { 
-            setPhone(data.phone)
-            setStreetAddress(data.streetAddress)
-            setZip(data.zip)
-            setCity(data.city)
-            setState(data.state)
-            setCountry(data.country)
-          } else {
-            console.log('Invalid response format from /api/profile')
-          }
-        }).catch(error => {
-          console.error('Error fetching profile data', error)
-        })
-      
-      }  
-  }, [status, session])
+      setUserData({
+        name: session.data.user.name,
+        image: session.data.user.image || '',
+        phone: '',
+        streetAddress: '',
+        zip: '',
+        city: '',
+        state: '',
+        country: '',
+      });
+
+      fetchProfileData();
+    }
+  }, [status, session]);
+
+  async function fetchProfileData() {
+    try {
+      const response = await fetch('/api/profile');
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok.');
+      }
+
+      const data = await response.json();
+
+      if (
+        data &&
+        data.phone &&
+        data.streetAddress &&
+        data.zip &&
+        data.city &&
+        data.state &&
+        data.country
+      ) {
+        setUserData((prevData) => ({
+          ...prevData,
+          phone: data.phone,
+          streetAddress: data.streetAddress,
+          zip: data.zip,
+          city: data.city,
+          state: data.state,
+          country: data.country,
+        }));
+      } else {
+        console.log('Invalid response format from /api/profile');
+      }
+    } catch (error) {
+      console.error('Error fetching profile data', error);
+    }
+  }
 
   async function handleProfileInfoUpdate(ev) {
-  ev.preventDefault();
+    ev.preventDefault();
 
-  const savingPromise = new Promise(async (resolve, reject) => {
     try {
       const response = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: userName,
-          image,
-          phone,
-          streetAddress,
-          zip,
-          city,
-          state,
-          country,
+          name: userData.name,
+          phone: userData.phone,
+          streetAddress: userData.streetAddress,
+          zip: userData.zip,
+          city: userData.city,
+          state: userData.state,
+          country: userData.country,
         }),
       });
 
       if (response.ok) {
-        resolve();
+        console.log('Profile updated successfully');
       } else {
-        reject();
+        console.error('Failed to update profile');
       }
     } catch (error) {
       console.error('Error during profile update:', error);
-      reject(error); // You can reject with the error object for more details
     }
-  });
-
-  // Now you can use the savingPromise
-  savingPromise
-    .then(() => {
-      // Handle successful save
-      console.log('Profile updated successfully');
-    })
-    .catch(() => {
-      // Handle failed save
-      console.error('Failed to update profile');
-    });
-}
-
-function handleFileChange(ev) {
-  const file = ev.target.files;
-
-  if (file?.length) {
-    const data = new FormData();
-    data.set('file', file[0]);
-
-    const uploadPromise = fetch('/api/upload', {
-      method: 'POST',
-      body: data,
-    })
-      .then(response => {
-        if (response.ok) {
-          return response.json().then(link => {
-            setImage(link);
-          });
-        }
-        throw new Error('Network response was not ok.');
-      })
-      .catch(error => {
-        console.error('Error during file upload:', error);
-        // Handle the error appropriately
-      });
   }
-}
 
-// Check status and return appropriate content
-if (status === 'loading') {
-  return 'Loading';
-}
-if (status === 'unauthenticated') {
-  return redirect('/login');
-}
+  function handleFileChange(ev) {
+    const file = ev.target.files;
 
-  // const userImage = session.data.user.image
+    if (file?.length) {
+      const data = new FormData();
+      data.set('file', file[0]);
+
+      fetch('/api/upload', {
+        method: 'POST',
+        body: data,
+      })
+        .then(async (response) => {
+          if (response.ok) {
+            return response.json().then((link) => {
+              setUserData((prevData) => ({
+                ...prevData,
+                image: link,
+              }));
+            });
+          }
+          throw new Error('Network response was not ok.');
+        })
+        .catch((error) => {
+          console.error('Error during file upload:', error);
+        });
+    }
+  }
+
+  if (status === 'loading') {
+    return 'Loading';
+  }
+
+  if (status === 'unauthenticated') {
+    return redirect('/login');
+  }
+
   return (
     <section className="my-8">
       <h1 className="text-center text-primary text-3xl font-semibold mb-4">
         Profile
       </h1>
-      <div className='max-w-md mx-auto'>
-        <div className='flex gap-2'>
+      <div className="max-w-md mx-auto">
+        <div className="flex gap-2">
           <div>
-            <div className='p-2 rounded-lg relative'>
-            <Image className='rounded-lg mt-3 mb-2' src={'/Yonas Feshaye.jpg'} width={120}height={120} alt={'avator'}/>
-             {/* {image && (<Image className='rounded-lg mt-3 mb-2' src={'/Yonas Feshaye.jpg'} width={120} height={120} alt={'avator'}/>)} */}
-            
-            <label>
-              <input type='file' className='hidden' onChange={handleFileChange}/>
-              <span className='block border border-gray-300 rounded-lg p-2 text-center cursor-pointer'>Edit</span>
-            </label>
+            <div className="p-2 rounded-lg relative">
+              {userData.image && (
+                <Image
+                  className="rounded-lg mt-3 mb-2"
+                  src={userData.image}
+                  width={120}
+                  height={120}
+                  alt="Avatar"
+                />
+              )}
+
+              <label>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <span className="block border border-gray-300 rounded-lg p-2 text-center cursor-pointer">
+                  Edit
+                </span>
+              </label>
             </div>
           </div>
-          <form className='grow' onSubmit={handleProfileInfoUpdate}>
+          <form className="grow" onSubmit={handleProfileInfoUpdate}>
             <label>First and Last Name</label>
-            <input type='text' placeholder='First and last name'
-            value={userName} onChange={(ev) => setUserName(ev.target.value)}
+            <input
+              type="text"
+              placeholder="First and last name"
+              value={userData.name}
+              onChange={(ev) =>
+                setUserData((prevData) => ({
+                  ...prevData,
+                  name: ev.target.value,
+                }))
+              }
             />
             <label>Email</label>
-            <input type='email' disabled={true} value={session.data && session.data.user && session.data.user.email}/>
+            <input
+              type="email"
+              disabled={true}
+              value={session.data?.user?.email || ''}
+            />
             <label>Phone Number</label>
-            <input type='tel' placeholder='Phone number'
-            value={phone} onChange={ev => setPhone(ev.target.value)}/>
+            <input
+              type="tel"
+              placeholder="Phone number"
+              value={userData.phone}
+              onChange={(ev) =>
+                setUserData((prevData) => ({
+                  ...prevData,
+                  phone: ev.target.value,
+                }))
+              }
+            />
             <label>Address</label>
-            <input type='text' placeholder='Street Address'
-            value={streetAddress} onChange={ev => setStreetAddress(ev.target.value)}/>
-            
-            <div className='flex gap-2'>
-            <div>
-              <label>Zip Code</label>
-            <input type='text' placeholder='Zip'
-            value={zip} onChange={ev => setZip(ev.target.value)}/>
-            </div>
-            <div>
-              <label>City</label>
-            <input type='text' placeholder='City'
-            value={city} onChange={ev => setCity(ev.target.value)}/>
-            </div>
-            
-            </div>
-             <div className='flex gap-2'>
-              <div>
-                 <label>State</label> 
-            <input type='text' placeholder='State'
-            value={state} onChange={ev => setState(ev.target.value)}/>
+            <input
+              type="text"
+              placeholder="Street Address"
+              value={userData.streetAddress}
+              onChange={(ev) =>
+                setUserData((prevData) => ({
+                  ...prevData,
+                  streetAddress: ev.target.value,
+                }))
+              }
+            />
 
+            <div className="flex gap-2">
+              <div>
+                <label>Zip Code</label>
+                <input
+                  type="text"
+                  placeholder="Zip"
+                  value={userData.zip}
+                  onChange={(ev) =>
+                    setUserData((prevData) => ({
+                      ...prevData,
+                      zip: ev.target.value,
+                    }))
+                  }
+                />
               </div>
-             
-            <div>
-               <label>Country</label>
-            <input type='text' placeholder='Country'
-            value={country} onChange={ev => setCountry(ev.target.value)}/>
+              <div>
+                <label>City</label>
+                <input
+                  type="text"
+                  placeholder="City"
+                  value={userData.city}
+                  onChange={(ev) =>
+                    setUserData((prevData) => ({
+                      ...prevData,
+                      city: ev.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
-           
+            <div className="flex gap-2">
+              <div>
+                <label>State</label>
+                <input
+                  type="text"
+                  placeholder="State"
+                  value={userData.state}
+                  onChange={(ev) =>
+                    setUserData((prevData) => ({
+                      ...prevData,
+                      state: ev.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label>Country</label>
+                <input
+                  type="text"
+                  placeholder="Country"
+                  value={userData.country}
+                  onChange={(ev) =>
+                    setUserData((prevData) => ({
+                      ...prevData,
+                      country: ev.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
-            <button type='submit'>Save</button>
+            <button type="submit">Save</button>
           </form>
-          </div>  
+        </div>
       </div>
     </section>
-  )
+  );
 }

@@ -11,7 +11,7 @@ const UserSchema = new Schema({
     city: {type: String},
     state: {type: String},
     country: {type: String},
-    role: {type: String, default: 'user'},
+    admin: {type: Boolean, default: false},
     
 
 }, {timestamps: true})
